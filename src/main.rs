@@ -234,7 +234,6 @@ fn NestedNode<'a, G: Html>(cx: Scope<'a>, n: Node, nodes_sig: &'a Signal<Vec<Nod
         .into_iter()
         .cloned()
         .collect();
-
     let children_signal = create_signal(cx, top_children);
 
     let toggle = |_| {
@@ -358,31 +357,36 @@ fn NestedNode<'a, G: Html>(cx: Scope<'a>, n: Node, nodes_sig: &'a Signal<Vec<Nod
     };
 
     view! { cx,
-        li(ref=node_ref, draggable=true, class="list-group-item", on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop) {
-            // <span class="badge bg-primary rounded-pill">14</span>
-            i(on:click=toggle, class=class())
-            (node_signal.get().name)
+            (
+                if node_signal.get().parent_id.is_none() {
+                    let class = class.clone();
+                    view!(cx,
+                    li(ref=node_ref, draggable=true, class="list-group-item",
+                       on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop) {
+                        i(on:click=toggle, class=class())
+                        (node_signal.get().name)
+                         (if *toggle_state.get() {
+                     view! { cx,
+                        ul(class="list-group") {
+                            Indexed(
+                                iterable=children_signal,
+                                view= move |cx, x| view! { cx,
+                                   li(class="list-group-item", ref=node_ref, draggable=true, on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop)
+                                                           {NestedNode(n=x, nodes_sig=ns)}
+                                },
+                                // key=|x| x.id,
+                            )
+                        }
+                     }
+                       } else {
+                           view! { cx, } // Now you don't
+                      }
+                 )
+                    }
+                    )
+                } else { view!{cx, } }
+            )
 
-             (if *toggle_state.get() {
-         view! { cx,
-            ul(class="list-group") {
-                Indexed(
-                    iterable=children_signal,
-                    view= move |cx, x| view! { cx,
-                       li(class="list-group-item", ref=node_ref, draggable=true, on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop)
-                                               {NestedNode(n=x, nodes_sig=ns)}
-                    },
-                    // key=|x| x.id,
-                )
-            }
-        }
-
-    } else {
-        view! { cx, } // Now you don't
-    }
-     )
-
-        }
     }
 }
 
@@ -424,7 +428,7 @@ fn ContainerWidget<G: Html>(cx: Scope) -> View<G> {
                 div(class="col-3"){
                     ul(class="list-group"){
                 Indexed(
-                    iterable=root_nodes,
+                    iterable=node_list,
                     view= move |cx, item|
                                            view! { cx, NestedNode(n = item, nodes_sig = node_list) },
                     // key=|item| item.id,
