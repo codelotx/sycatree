@@ -365,26 +365,46 @@ fn NestedNode<'a, G: Html>(cx: Scope<'a>, n: Node, nodes_sig: &'a Signal<Vec<Nod
                        on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop) {
                         i(on:click=toggle, class=class())
                         (node_signal.get().name)
-                         (if *toggle_state.get() {
-                     view! { cx,
-                        ul(class="list-group") {
-                            Indexed(
-                                iterable=children_signal,
-                                view= move |cx, x| view! { cx,
-                                   li(class="list-group-item", ref=node_ref, draggable=true, on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop)
-                                                           {NestedNode(n=x, nodes_sig=ns)}
-                                },
-                                // key=|x| x.id,
-                            )
-                        }
-                     }
-                       } else {
-                           view! { cx, } // Now you don't
-                      }
-                 )
-                    }
+                                            }
                     )
-                } else { view!{cx, } }
+                } else if node_signal.get().parent_id.is_some()  {
+
+                                 view! { cx,
+                                  ul(class="list-group") {
+                                      Indexed(
+                                          iterable=children_signal,
+                                          view= move |cx, x| view! { cx,
+                                                                     li(class="list-group-item", ref=node_ref, draggable=true, on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop)
+                                                                     {NestedNode(n=x, nodes_sig=ns)}
+                                          },
+                                          // key=|x| x.id,
+                                      )
+                                  }
+                    }
+                     /*
+                    (
+                      if *toggle_state.get() {
+                          view! { cx,
+                                  ul(class="list-group") {
+                                      Indexed(
+                                          iterable=children_signal,
+                                          view= move |cx, x| view! { cx,
+                                                                     li(class="list-group-item", ref=node_ref, draggable=true, on:dragstart=handle_dragstart, on:dragend=handle_dragend, on:dragenter=handle_dragenter, on:dragover=handle_dragover, on:dragleave=handle_dragleave, on:drop=handle_drop)
+                                                                     {NestedNode(n=x, nodes_sig=ns)}
+                                          },
+                                          // key=|x| x.id,
+                                      )
+                                  }
+                    }
+                      } else {
+                          view! { cx, } // Now you don't
+                      }
+                    )
+                    */
+
+                }else {
+                    view!(cx, )
+                }
             )
 
     }
